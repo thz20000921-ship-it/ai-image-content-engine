@@ -1,0 +1,26 @@
+{
+  "task_id": "replace-with-stable-task-id",
+  "mode": "original",
+  "project": "自有流程说明",
+  "theme": "三步整理桌面文件",
+  "audience": "需要整理个人资料的读者",
+  "purpose": "解释人工整理流程",
+  "product": {
+    "name": "自有资料整理流程",
+    "facts": ["本次介绍人工操作：文件分组、按日期整理、核对存放位置。"],
+    "boundaries": ["不描述任何软件的自动化功能，不生成软件操作截图。"]
+  },
+  "title": "三步整理桌面文件",
+  "content_mode": "final",
+  "page_count": 3,
+  "pages": [
+    {"page_number": 1, "role": "cover", "title": "三步整理桌面文件", "copy": "先分组，再整理，最后核对。", "visual": "原创文件夹示意插画，清晰信息层级。"},
+    {"page_number": 2, "role": "steps", "title": "分组与整理", "copy": "1. 按资料用途分组。\n2. 在各组内按日期整理。", "visual": "两步原创信息图，不画软件界面。"},
+    {"page_number": 3, "role": "summary", "title": "最后核对存放位置", "copy": "确认资料分类与存放位置，方便下次查找。", "visual": "使用与封面一致的色板和字体层级。"}
+  ],
+  "visual_rules": ["中文标题清楚完整", "统一字体层级、色板与边距", "竖版信息图，原创画面"],
+  "references": [],
+  "brand": {"enabled": false},
+  "generation": {"size": "1024x1536", "quality": "low"},
+  "authorization": {"approved": false, "max_image_requests": 0}
+}

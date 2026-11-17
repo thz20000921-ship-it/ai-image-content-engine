@@ -1,0 +1,31 @@
+{
+  "date": "2026-11-17T00:09:42.063619+08:00",
+  "mode": "OFFLINE_EXPLICIT_FAKE_PROVIDER",
+  "real_model_calls": 0,
+  "external_network": "blocked",
+  "tests": 20,
+  "failures": 0,
+  "errors": 0,
+  "elapsed_seconds": 41.16,
+  "batch_cases": [
+    {
+      "case": "batch_12",
+      "works": 12,
+      "mock_pages": 24,
+      "real_paid_requests": 0
+    },
+    {
+      "case": "batch_20",
+      "works": 20,
+      "mock_pages": 39,
+      "real_paid_requests": 0
+    }
+  ],
+  "unverified": [
+    "real image model",
+    "real vision model",
+    "generated text accuracy",
+    "real product features and screenshots",
+    "platform reference fetching"
+  ]
+}

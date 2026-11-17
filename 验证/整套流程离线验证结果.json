@@ -1,0 +1,48 @@
+{
+  "passed": true,
+  "external_api_requests": 0,
+  "offline_fake_calls": 35,
+  "five_references_five_jobs": true,
+  "seven_references_five_selected_jobs": true,
+  "dynamic_page_counts": {
+    "2": {
+      "jobs": 2,
+      "fake_outputs": 2,
+      "passed": true
+    },
+    "3": {
+      "jobs": 3,
+      "fake_outputs": 3,
+      "passed": true
+    },
+    "6": {
+      "jobs": 6,
+      "fake_outputs": 6,
+      "passed": true
+    },
+    "7": {
+      "jobs": 7,
+      "fake_outputs": 7,
+      "passed": true
+    }
+  },
+  "per_run_changes_override_base_prompt": true,
+  "target_reference_sent_first": true,
+  "only_target_page_transmitted": true,
+  "full_set_retained_locally": true,
+  "source_result_comparison_mapping": true,
+  "configured_concurrency_three_supported": true,
+  "serial_concurrency_one_verified": true,
+  "concurrency_max": 3,
+  "failed_page_preserved": true,
+  "manual_retry_only_failed_page": true,
+  "auto_retry_three_attempts": true,
+  "idempotent_submission": true,
+  "watermark_raw_retained": true,
+  "watermark_repair_no_api": true,
+  "watermark_no_double_application": true,
+  "ordered_zip": true,
+  "settings_and_history_after_restart": true,
+  "sqlite_integrity": "ok",
+  "fixture_directory": "F:\\3.工作\\2026\\jiaoben\\复刻图文-独立版\\验证\\整套流程离线数据-f52f818b"
+}

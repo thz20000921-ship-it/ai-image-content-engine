@@ -1,0 +1,16 @@
+{
+  "provider": "EXPLICIT_OFFLINE_FIXTURE",
+  "real_model_calls": 0,
+  "no_reference_form_submission": true,
+  "single_page_revision": true,
+  "browser_zip_download": true,
+  "original_provider_settings_opened": true,
+  "viewport": 375,
+  "documentWidth": 375,
+  "generateVisible": true,
+  "reducedMotion": true,
+  "revisions": [
+    "第 1 页 · v1",
+    "第 2 页 · v2"
+  ]
+}

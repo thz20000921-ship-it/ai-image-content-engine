@@ -1,0 +1,51 @@
+# Personal configuration, credentials and task data
+.env
+.env.*
+!.env.example
+settings.json
+webui-*.json
+agent-token.txt
+auth.json
+credentials.json
+*.pem
+*.key
+*.p12
+*.pfx
+*.sqlite
+*.sqlite3
+*.db
+webui-inputs/
+webui-outputs/
+source-data/
+runtime/data/
+
+# Bundled executables and local Python environments
+runtime/python/
+runtime/*.exe
+.venv/
+venv/
+**/__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Backups, generated images, isolated test data and logs
+备份/
+*.zip
+*.log
+验证/证据/
+验证/浏览器离线数据/
+验证/*离线数据*/
+验证/*.png
+验证截图-*.png
+
+# Unused legacy company logo and promotional screenshots/contact assets
+runtime/app/company-defaults/*.png
+runtime/app/assets/
+
+# Local editor/system state
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

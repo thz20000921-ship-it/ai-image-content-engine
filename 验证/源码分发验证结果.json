@@ -1,0 +1,77 @@
+{
+  "date": "2026-11-17T08:40:58.750312+08:00",
+  "source_snapshot_git_tree": "50ead900b3deb1269fb971908d1e7f8d8a325afc",
+  "source_snapshot": "git archive; no bundled Python, executable, pre-change ZIP or personal data",
+  "python": "3.11.9; isolated venv",
+  "dependencies": "Project lock verified; installed packages reused from local portable runtime",
+  "fresh_package_index_install": "未验证",
+  "unpinned_environment": "System FastAPI 0.138.0 failed an app.routes structure assertion; acceptance uses pinned FastAPI 0.136.1",
+  "offline_integration": {
+    "date": "2026-11-17T08:39:55.557512+08:00",
+    "mode": "OFFLINE_EXPLICIT_FAKE_PROVIDER",
+    "real_model_calls": 0,
+    "external_network": "blocked",
+    "tests": 20,
+    "failures": 0,
+    "errors": 0,
+    "elapsed_seconds": 43.03,
+    "batch_cases": [
+      {
+        "case": "batch_12",
+        "works": 12,
+        "mock_pages": 24,
+        "real_paid_requests": 0
+      },
+      {
+        "case": "batch_20",
+        "works": 20,
+        "mock_pages": 39,
+        "real_paid_requests": 0
+      }
+    ],
+    "unverified": [
+      "real image model",
+      "real vision model",
+      "generated text accuracy",
+      "real product features and screenshots",
+      "platform reference fetching"
+    ]
+  },
+  "loopback_http": {
+    "transport": "real loopback TCP HTTP, independent client process",
+    "provider": "EXPLICIT_OFFLINE_FIXTURE",
+    "real_model_calls": 0,
+    "source_assets": 1,
+    "output_pages": 5,
+    "page_revision": 3,
+    "initial_requests_simulated": 5,
+    "revision_requests_simulated": 1,
+    "other_pages_unchanged": true,
+    "png_download": true,
+    "zip_download": true,
+    "unverified": [
+      "real model output",
+      "real generated text",
+      "product functionality"
+    ]
+  },
+  "production_launcher": {
+    "production_launcher": "passed",
+    "empty_personal_data": "passed",
+    "occupied_port_rejected": true,
+    "other_processes_terminated": false,
+    "api_auth": "passed",
+    "real_model_calls": 0,
+    "configured_real_provider": false,
+    "license_and_pyproject_preserved": true
+  },
+  "source_completeness": {
+    "codex_image_files": 166,
+    "missing": 0
+  },
+  "upload_scan": {
+    "forbidden_paths": 0,
+    "secret_pattern_candidates": 0
+  },
+  "real_model_calls": 0
+}

@@ -1,0 +1,15 @@
+{
+  "passed": true,
+  "external_api_requests": 0,
+  "fixture_directory": "F:\\3.工作\\2026\\jiaoben\\复刻图文-独立版\\验证\\R1-R4离线数据-81bc8811",
+  "staged_while_waiting_turn": true,
+  "staged_not_requeued_after_restart": true,
+  "retry_timeout_escalation": [
+    900,
+    300,
+    300
+  ],
+  "native_task_single_attempt": true,
+  "dedupe_by_note_id": true,
+  "offline_fake_calls": 6
+}

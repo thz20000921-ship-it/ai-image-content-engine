@@ -1,0 +1,17 @@
+const task = await taskSpace(11);
+const page = task.page("p1");
+await page.reload();
+await page.fill("#engineTheme","非行业默认值验收：茶叶冲泡说明");
+await page.fill("#engineAudience","刚开始泡茶的普通读者");
+await page.fill("#engineProduct","自有茶叶资料");
+await page.fill("#engineFacts","示例只用于离线流程测试，不宣称真实功效。");
+await page.fill("#enginePageCount","2");
+await page.fill("#enginePageCopy","先准备茶具\n核对清洁与材料。\n---\n根据资料冲泡\n此处是已确认的示例文字。");
+await page.fill("#engineVisual","清晰中文信息图，默认无水印。");
+await page.fill("#engineBudget","2");
+await page.click("#engineApproved",{label:"确认离线测试请求额度"});
+console.log(await page.evaluate(()=>({buttonDisabled:document.getElementById("companyPrepare").disabled,budgetVisible:getComputedStyle(document.querySelector(".cw-run-area")).display,copy:document.getElementById("enginePageCopy").value})));
+await page.click("#companyPrepare",{label:"提交离线两页原创任务"});
+await page.waitForFunction(()=>document.querySelectorAll(".cw-result[data-state='completed']").length===2,undefined,{timeout:15000});
+console.log(await page.snapshot({scope:"full_page"}));
+console.log(await page.screenshot({path:"D:/3.项目/Pythonchengxu/复刻图文-独立版-20261116b/复刻图文-独立版/验证/证据/工作台-离线生成.png"}));

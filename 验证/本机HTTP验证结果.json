@@ -1,0 +1,19 @@
+{
+  "transport": "real loopback TCP HTTP, independent client process",
+  "provider": "EXPLICIT_OFFLINE_FIXTURE",
+  "real_model_calls": 0,
+  "source_assets": 1,
+  "output_pages": 5,
+  "page_revision": 3,
+  "initial_requests_simulated": 5,
+  "revision_requests_simulated": 1,
+  "other_pages_unchanged": true,
+  "png_download": true,
+  "zip_download": true,
+  "evidence_directory": "D:\\3.项目\\Pythonchengxu\\复刻图文-独立版-20261116b\\复刻图文-独立版\\验证\\证据\\离线HTTP-4e1c27d5",
+  "unverified": [
+    "real model output",
+    "real generated text",
+    "product functionality"
+  ]
+}

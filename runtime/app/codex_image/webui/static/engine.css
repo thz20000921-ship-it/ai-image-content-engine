@@ -1,0 +1,30 @@
+/* Existing workbench layout, with explicit content and charge controls. */
+.cw-engine-form { display:grid; gap:9px; margin:16px 0; }
+.cw-engine-form label { font-size:13px; font-weight:600; color:var(--cw-ink); }
+.cw-engine-form input:not([type=checkbox]), .cw-engine-form select,
+.cw-run-area input[type=number] {
+  width:100%; min-width:0; min-height:44px; border:1px solid #b7c4ce;
+  border-radius:6px; padding:8px 10px; background:#fff; color:var(--cw-ink); font:inherit;
+}
+.cw-engine-form textarea { min-height:80px; font-size:14px; }
+.cw-engine-form input[type=checkbox], .cw-budget-approval input { width:18px; height:18px; flex-shrink:0; }
+.cw-engine-form label:has(input[type=checkbox]), .cw-budget-approval { display:flex; align-items:flex-start; gap:8px; }
+.cw-app .cw-engine-form :focus-visible, .cw-dialog .cw-engine-form :focus-visible,
+.cw-run-area :focus-visible { outline:2px solid var(--cw-blue); outline-offset:3px; }
+.cw-app .cw-composer .cw-run-area { display:block !important; max-height:42dvh; overflow:auto; }
+.cw-run-area > label { display:block; font-size:12px; margin-bottom:7px; }
+.cw-run-area .cw-budget-approval { display:flex; margin:12px 0 8px; line-height:1.5; }
+.cw-run-area > p { font-size:12px; line-height:1.6; margin:8px 0; }
+.cw-result-controls {
+  position:static !important; opacity:1 !important; pointer-events:auto !important;
+  transform:none !important; flex-wrap:wrap; box-shadow:none; background:transparent;
+}
+.cw-result-controls button,.cw-result-controls a { min-height:36px; }
+#engineRevision { width:min(620px, calc(100vw - 32px)); max-height:90dvh; overflow:auto; padding:24px; }
+#engineRevision textarea { width:100%; min-height:100px; border:1px solid #b7c4ce; border-radius:6px; padding:10px; font:inherit; }
+#engineRevisionMessage { color:#a12828; }
+@media(max-width:700px) {
+  .cw-app .cw-composer .cw-run-area { max-height:none; }
+  .cw-dialog-actions { flex-wrap:wrap; }
+  .cw-dialog-actions button { min-height:44px; }
+}

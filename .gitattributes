@@ -1,0 +1,8 @@
+* text=auto eol=lf
+*.cmd text eol=crlf
+*.png -text
+*.webp -text
+# Preserve original rights declarations and conflicting package metadata byte for byte.
+runtime/LICENSE -text
+runtime/app/LICENSE -text
+runtime/app/pyproject.toml -text

@@ -1,0 +1,15 @@
+const task = await taskSpace(11);
+const page = task.page("p1");
+await page.reload();
+await page.waitForSelector(".cw-history-item",{state:"visible"});
+await page.click(".cw-history-item:has-text('先准备茶具')",{label:"查看原来的两页测试"});
+await page.click(".cw-result[data-page='2'] button:has-text('修改此页')",{label:"打开第二页修改表单"});
+await page.fill("#engineRevisionHeading","根据资料冲泡（已修正）");
+await page.click("#engineRevisionSubmit",{label:"只生成第二页新版本"});
+await page.waitForFunction(()=>[...document.querySelectorAll(".cw-result")].some(e=>e.dataset.page==="2" && e.dataset.state==="completed" && e.innerText.includes("v2")),undefined,{timeout:15000});
+const downloadPromise=page.waitForEvent("download",{timeout:10000});
+await page.click("#companyZipDownload",{label:"下载离线测试整套图片"});
+const download=await downloadPromise;
+await download.saveAs("D:/3.项目/Pythonchengxu/复刻图文-独立版-20261116b/复刻图文-独立版/验证/证据/浏览器ZIP-离线.zip");
+await page.click("#companySettings",{label:"打开原有供应商设置"});
+console.log(await page.snapshot());
