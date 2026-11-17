@@ -481,13 +481,24 @@ def register_engine_routes(app: FastAPI, ctx: WebUIContext) -> None:
                     if report["completed_pages"] != report["total_pages"]:
                         raise HTTPException(409, "有未完成页面，完整导出暂不可用；可单独下载已完成页。")
                     folder = batch["external_id"]
-                    for row in batch["pages"]:
+                    # Export delivery metadata, not the local progress/debug response.
+                    manifest = {key: report[key] for key in (
+                        "job_id", "batch_id", "title", "mode", "build", "created_at",
+                        "status", "completed_pages", "failed_pages", "total_pages", "content_check")}
+                    manifest["pages"] = []
+                    for row in report["pages"]:
                         source = current_output(batch, row["page_number"])
                         total += source.stat().st_size
                         if total > 512 * 1024 * 1024:
                             raise HTTPException(413, "单次导出超过512MB，请分套下载。")
-                        target.write(source, f"{folder}/{row['page_number']:02d}-第{row['page_number']}页.png")
-                    target.writestr(folder + "/manifest.json", json.dumps(report, ensure_ascii=False, indent=2))
+                        filename = f"{row['page_number']:02d}-第{row['page_number']}页.png"
+                        target.write(source, f"{folder}/{filename}")
+                        exported = {key: row[key] for key in (
+                            "page_number", "task_id", "version", "status", "content",
+                            "expected_text", "sha256", "quality_check", "text_review")}
+                        exported["output_path"] = filename
+                        manifest["pages"].append(exported)
+                    target.writestr(folder + "/manifest.json", json.dumps(manifest, ensure_ascii=False, indent=2))
             return OneTimeTaskArchiveResponse(path, filename="image-engine-results.zip")
         except BaseException:
             path.unlink(missing_ok=True)

@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 import argparse
+import io
 import json
 import os
 from pathlib import Path
 import time
+import zipfile
 
 import httpx
 
@@ -63,7 +65,11 @@ def main():
         response = client.get(job["download_url"])
         response.raise_for_status()
         (directory / "整套.zip").write_bytes(response.content)
-        (directory / "manifest.json").write_text(json.dumps(job, ensure_ascii=False, indent=2), encoding="utf-8")
+        with zipfile.ZipFile(io.BytesIO(response.content)) as archive:
+            manifest = json.loads(archive.read(job["job_id"] + "/manifest.json"))
+        for row in manifest["pages"]:
+            row["output_path"] = f"{row['page_number']:02d}-v{row['version']}.png"
+        (directory / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
         print(f"已交付: {directory.resolve()}。请核对图中文字及产品事实。")
 
 

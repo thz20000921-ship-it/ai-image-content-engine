@@ -115,9 +115,9 @@ asset_id = result.json()["assets"][0]["id"]
 
 - `rights` 为 `inspiration`、`owned`、`licensed`。编辑母版只能使用 owned/licensed。
 - 第三方启发素材不用于去水印再包装。原始行业主题不能覆盖新主题或产品事实。
-- inspired 默认只向第一页附带第一张参考，其余页独立原创；需要更多素材时，在当前页 `asset_ids` 明确列出，最多4个。不默认把所有参考发送给每页。
-- edit 必须为每个输出页明确选择授权母版（第一页可默认第一张）；没有指定其他页母版时拒绝请求。
-- 产品截图等素材也通过 `pages[].asset_ids` 指定。真实素材优先；不得生成假截图冒充实测。
+- inspired 默认只向第一页附带第一张 `purpose="reference"` 素材，不受产品素材的上传顺序影响；其余页独立原创。当前页 `asset_ids` 优先于默认选择，最多4个。不默认把所有参考发送给每页。
+- edit 必须为每个输出页明确选择授权母版（第一页可默认第一张 `purpose="reference"` 的授权素材）；没有选中母版时拒绝请求。
+- 产品截图等 `purpose="product_material"` 素材只通过 `pages[].asset_ids` 指定，不会自动被用作封面参考或编辑母版。original 无默认附件。真实素材优先；不得生成假截图冒充实测。
 - 一张参考封面可以生成5页；多个来源也可共同提供全套方向。素材数量、单套页数、套数互相独立。
 - 原来的本地文件/文件夹选择与 `/api/company-workflow/link` 导入保留。链接导入仅在平台正常允许访问时工作，遇到登录/验证码/访问限制停止。source URL 本身不会触发生图引擎抓取。
 
@@ -161,6 +161,8 @@ GPT Images 使用 `size/quality`，`n=1`；其他原有模型可在 `generation.
 
 任务返回 `job_id`（调用方ID）、`id/batch_id`（内部套图ID）、`pages[].task_id/version/versions`、完成/失败计数、错误、预算使用、PNG下载地址、绝对输出路径及ZIP地址。
 状态包括 queued、running、completed、partial_failed、failed、cancelled、preparing。completed 仅表示文件已生成，不等于文字及产品真实性已验收。每页保留准确文案、文件解码/比例检查和校核状态。
+
+绝对输出路径只供已认证的本机客户端定位文件。单套和批量 ZIP 中每套的 `manifest.json` 使用交付字段：任务标识、页序、当前版本、准确文案、文件哈希和检查结果；`pages[].output_path` 为相对于该清单的图片文件名（如 `01-第1页.png`）。不写入本机绝对路径、运行期预算/修订请求或本机下载地址。示例客户端沿用此交付清单，并将相对文件名对应到本地下载的版本文件（如 `01-v1.png`）；历史版本和详细进度仍通过本机接口查询。
 
 只改第3页标题：
 

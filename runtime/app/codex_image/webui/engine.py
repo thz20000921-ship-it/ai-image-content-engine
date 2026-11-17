@@ -222,8 +222,10 @@ def planned_job(job: Job) -> Job:
 def selected_assets(job: Job, page: Page) -> list[str]:
     if page.asset_ids:
         return list(page.asset_ids)
-    if page.page_number == 1 and job.references and job.mode != "original":
-        return [job.references[0].asset_id]
+    if page.page_number == 1 and job.mode != "original":
+        reference = next((r for r in job.references if r.purpose == "reference"), None)
+        if reference:
+            return [reference.asset_id]
     return []
 
 

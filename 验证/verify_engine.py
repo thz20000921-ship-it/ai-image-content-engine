@@ -7,7 +7,7 @@ import hashlib
 import io
 import json
 from datetime import datetime
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 import socket
 import sys
 import tempfile
@@ -85,6 +85,29 @@ class EngineAcceptance(unittest.TestCase):
         response = self.client.post("/api/engine/assets", files=[("images", ("fixture.png", png(label), "image/png"))])
         self.assertEqual(response.status_code, 200, response.text)
         return response.json()["assets"][0]["id"]
+
+    def assert_delivery_manifest(self, archive, job):
+        folder = job["job_id"]
+        text = archive.read(folder + "/manifest.json").decode("utf-8")
+        manifest = json.loads(text)
+        self.assertEqual(manifest["job_id"], folder)
+        self.assertEqual(manifest["total_pages"], len(job["pages"]))
+        for field in ("budgets", "revisions", "download_url", "engine_request", "changes"):
+            self.assertNotIn(field, manifest)
+        for path in (self.data, self.data.resolve()):
+            self.assertNotIn(json.dumps(str(path), ensure_ascii=False)[1:-1], text)
+        self.assertEqual(len(manifest["pages"]), len(job["pages"]))
+        for exported, current in zip(manifest["pages"], job["pages"], strict=True):
+            path = exported["output_path"]
+            self.assertEqual(path, f"{current['page_number']:02d}-第{current['page_number']}页.png")
+            self.assertFalse(PurePosixPath(path).is_absolute())
+            self.assertFalse(PureWindowsPath(path).drive)
+            self.assertEqual(PurePosixPath(path).parts, (path,))
+            for field in ("page_number", "task_id", "version", "sha256", "expected_text"):
+                self.assertEqual(exported[field], current[field])
+            self.assertEqual(hashlib.sha256(archive.read(folder + "/" + path)).hexdigest(), current["sha256"])
+            self.assertNotIn("download_url", exported)
+        return manifest
 
     def test_01_local_security_and_secret_redaction(self):
         with self.service(start=False) as client:
@@ -313,6 +336,8 @@ class EngineAcceptance(unittest.TestCase):
                 self.assertEqual(zipped.status_code, 200)
                 with zipfile.ZipFile(io.BytesIO(zipped.content)) as archive:
                     self.assertEqual(len([n for n in archive.namelist() if n.endswith(".png")]), total)
+                    for job in value["jobs"]:
+                        self.assert_delivery_manifest(archive, job)
                 RESULTS.append({"case": f"batch_{count}", "works": count, "mock_pages": total, "real_paid_requests": 0})
 
     def test_10_cancel_and_resume_unstarted_jobs(self):
@@ -591,6 +616,76 @@ class EngineAcceptance(unittest.TestCase):
             second.write_bytes(first.read_bytes())
             checked = client.get("/api/engine/jobs/" + job["task_id"]).json()
             self.assertEqual(checked["content_check"]["identical_image_pages"], [[1, 2]])
+
+    def test_21_mixed_materials_select_reference_and_explicit_product_page(self):
+        with self.service() as client:
+            product = self.asset("用户自有产品截图（离线）")
+            reference = self.asset("创意参考一（离线）")
+            other = self.asset("创意参考二（离线）")
+            job = example("mixed-materials", 3)
+            job.update(mode="inspired", references=[
+                {"asset_id": product, "purpose": "product_material", "rights": "owned"},
+                {"asset_id": reference, "purpose": "reference", "rights": "owned"},
+                {"asset_id": other, "purpose": "reference", "rights": "licensed"},
+            ])
+            job["pages"][1]["asset_ids"] = [product]
+            self.post("/jobs", job)
+            result = self.wait(job["task_id"])
+            self.assertEqual(result["status"], "completed")
+            expected = [[reference], [product], []]
+            self.assertEqual([c["references"] for c in CALLS], [1, 1, 0])
+            for row, selected, call in zip(result["pages"], expected, CALLS, strict=True):
+                meta = self.ctx.storage.read_metadata(row["task_id"])
+                self.assertEqual(meta["params"]["company_page"]["selected_asset_ids"], selected)
+                if selected:
+                    self.assertEqual(row["reference_url"], f"/api/reference-assets/{selected[0]}/image")
+                else:
+                    self.assertNotIn("reference_url", row)
+                for ident in (product, reference, other):
+                    self.assertEqual(ident in call["prompt"], ident in selected)
+            planned = engine.Job.model_validate(job)
+            for mode in ("inspired", "edit", "original"):
+                current = planned.model_copy(update={"mode": mode}, deep=True)
+                cover = current.pages[0]
+                self.assertEqual(engine.selected_assets(current, cover), [] if mode == "original" else [reference])
+                explicit = cover.model_copy(update={"asset_ids": [product, other]})
+                self.assertEqual(engine.selected_assets(current, explicit), [product, other])
+                self.assertEqual(engine.selected_assets(current, current.pages[2]), [])
+            # Product-only input is valid for original generation, but never a default attachment.
+            product_only = deepcopy(job)
+            product_only.update(task_id="product-only-edit", mode="edit", references=job["references"][:1])
+            self.assertEqual(client.post("/api/engine/jobs", json=product_only).status_code, 400)
+            self.assertEqual(len(CALLS), 3)
+            product_only["mode"] = "original"
+            current = engine.Job.model_validate(product_only)
+            self.assertEqual(engine.selected_assets(current, current.pages[0]), [])
+            product_only["mode"] = "inspired"
+            self.assertEqual(client.post("/api/engine/jobs", json=product_only).status_code, 422)
+            self.assertEqual(len(CALLS), 3)
+
+    def test_22_export_manifest_is_portable_after_page_revision(self):
+        with self.service() as client:
+            job = example("portable-export", 2)
+            job["requirements"] = "仅本机执行所需的内部素材位置：" + str(self.data / "private-materials")
+            self.post("/jobs", job)
+            self.wait(job["task_id"])
+            self.post("/jobs/portable-export/revisions", {
+                "revision_id": "portable-page-2", "pages": [{"page_number": 2, "title": "交付版第二页"}],
+                "instructions": "本机审核记录：" + str(self.data.resolve()),
+                "authorization": {"approved": True, "max_image_requests": 1},
+            })
+            result = self.wait(job["task_id"])
+            self.assertEqual([p["version"] for p in result["pages"]], [1, 2])
+            self.assertTrue(all(Path(p["output_path"]).is_absolute() for p in result["pages"]))
+            response = client.get(result["download_url"])
+            self.assertEqual(response.status_code, 200)
+            with zipfile.ZipFile(io.BytesIO(response.content)) as archive:
+                manifest = self.assert_delivery_manifest(archive, result)
+                self.assertEqual(manifest["pages"][1]["content"]["title"], "交付版第二页")
+            after = client.get("/api/engine/jobs/portable-export").json()
+            self.assertEqual([p["output_path"] for p in after["pages"]], [p["output_path"] for p in result["pages"]])
+            self.assertEqual(len(after["pages"][1]["versions"]), 1)
+            self.assertEqual(len(CALLS), 3)
 
 
 if __name__ == "__main__":

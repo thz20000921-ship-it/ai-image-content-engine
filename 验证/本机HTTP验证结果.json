@@ -10,7 +10,10 @@
   "other_pages_unchanged": true,
   "png_download": true,
   "zip_download": true,
-  "evidence_directory": "D:\\3.项目\\Pythonchengxu\\复刻图文-独立版-20261116b\\复刻图文-独立版\\验证\\证据\\离线HTTP-4e1c27d5",
+  "relative_manifest_paths": true,
+  "example_client_portable_manifest": true,
+  "example_client_requests_simulated": 3,
+  "evidence_directory": "验证/证据/离线HTTP-348d3e25",
   "unverified": [
     "real model output",
     "real generated text",

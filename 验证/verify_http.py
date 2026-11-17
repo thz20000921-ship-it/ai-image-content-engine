@@ -97,13 +97,33 @@ def main():
             (evidence / "离线模拟交付.zip").write_bytes(response.content)
             with zipfile.ZipFile(io.BytesIO(response.content)) as archive:
                 assert len([name for name in archive.namelist() if name.endswith(".png")]) == 5
+                manifest = json.loads(archive.read(ident + "/manifest.json"))
+                for exported, row in zip(manifest["pages"], final["pages"], strict=True):
+                    assert exported["version"] == row["version"]
+                    assert exported["output_path"] == f"{row['page_number']:02d}-第{row['page_number']}页.png"
+                    assert hashlib.sha256(archive.read(ident + "/" + exported["output_path"])).hexdigest() == row["sha256"]
+                assert "budgets" not in manifest and "revisions" not in manifest
+            example_output = evidence / "example-client"
+            completed = subprocess.run([
+                sys.executable, str(PROJECT / "示例/agent_client.py"), "--base-url", base,
+                "--data-dir", str(data), "--task-id", "http-example-client", "--execute",
+                "--approve-image-requests", "3", "--output", str(example_output)],
+                capture_output=True, timeout=45, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+            assert completed.returncode == 0, completed.stderr.decode(errors="replace")
+            delivered = example_output / "http-example-client"
+            manifest = json.loads((delivered / "manifest.json").read_text(encoding="utf-8"))
+            for page in manifest["pages"]:
+                assert hashlib.sha256((delivered / page["output_path"]).read_bytes()).hexdigest() == page["sha256"]
+            assert str(data) not in json.dumps(manifest, ensure_ascii=False).replace("\\\\", "\\")
             (evidence / "最终进度.json").write_text(json.dumps(final, ensure_ascii=False, indent=2), encoding="utf-8")
             report = {"transport": "real loopback TCP HTTP, independent client process",
                       "provider": "EXPLICIT_OFFLINE_FIXTURE", "real_model_calls": 0,
                       "source_assets": 1, "output_pages": 5, "page_revision": 3,
                       "initial_requests_simulated": 5, "revision_requests_simulated": 1,
                       "other_pages_unchanged": True, "png_download": True, "zip_download": True,
-                      "evidence_directory": str(evidence.resolve()),
+                      "relative_manifest_paths": True, "example_client_portable_manifest": True,
+                      "example_client_requests_simulated": 3,
+                      "evidence_directory": evidence.relative_to(PROJECT).as_posix(),
                       "unverified": ["real model output", "real generated text", "product functionality"]}
             (PROJECT / "验证" / "本机HTTP验证结果.json").write_text(
                 json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")

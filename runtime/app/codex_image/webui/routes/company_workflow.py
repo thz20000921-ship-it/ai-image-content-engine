@@ -135,7 +135,11 @@ def register_company_workflow_routes(app: FastAPI, ctx: WebUIContext) -> None:
                 row["elapsed_seconds"] = sum(r.get("elapsed_seconds") or 0 for r in records) or None
                 company = meta.get("params", {}).get("company_page", {})
                 order = meta.get("reference_image_order") or []
-                source_id = company.get("target_asset_id") or (order[0].get("id") if order else None)
+                if company.get("reference_strategy") == "selected":
+                    selected = company.get("selected_asset_ids") or []
+                    source_id = selected[0] if selected else None
+                else:
+                    source_id = company.get("target_asset_id") or (order[0].get("id") if order else None)
                 source = next((r for r in meta.get("reference_assets", []) if r.get("id") == source_id), None)
                 if source:
                     row.update(reference_url=f"/api/reference-assets/{source_id}/image",

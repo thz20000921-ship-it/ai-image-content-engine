@@ -61,7 +61,7 @@ try:
     report = {"production_launcher": "passed", "empty_personal_data": "passed",
               "occupied_port_rejected": True, "other_processes_terminated": False,
               "api_auth": "passed", "real_model_calls": 0, "configured_real_provider": False,
-              "license_and_pyproject_preserved": True, "evidence_directory": str(evidence.resolve())}
+              "license_and_pyproject_preserved": True, "evidence_directory": evidence.relative_to(PROJECT).as_posix()}
     (PROJECT / "验证/独立启动验证结果.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps(report, ensure_ascii=False))
 finally:
