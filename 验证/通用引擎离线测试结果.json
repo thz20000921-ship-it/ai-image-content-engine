@@ -1,12 +1,12 @@
 {
-  "date": "2026-11-17T09:01:13.648637+08:00",
+  "date": "2026-11-17T17:16:13.644256+08:00",
   "mode": "OFFLINE_EXPLICIT_FAKE_PROVIDER",
   "real_model_calls": 0,
   "external_network": "blocked",
-  "tests": 22,
+  "tests": 25,
   "failures": 0,
   "errors": 0,
-  "elapsed_seconds": 43.47,
+  "elapsed_seconds": 48.19,
   "batch_cases": [
     {
       "case": "batch_12",

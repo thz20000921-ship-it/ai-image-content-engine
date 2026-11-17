@@ -272,6 +272,7 @@ def register_engine_routes(app: FastAPI, ctx: WebUIContext) -> None:
                      for p in public["providers"]]
         config = seed_defaults(root)
         return {"api_version": 1, "build": BUILD, "modes": ["inspired", "original", "edit"],
+                "reference_policies": ["inspiration", "layout"],
                 "active_provider_id": public["active_provider_id"], "providers": providers,
                 "analysis": {"configured": bool(config.get("analysis_api_key") and config.get("analysis_model")
                                               and config.get("analysis_base_url")),

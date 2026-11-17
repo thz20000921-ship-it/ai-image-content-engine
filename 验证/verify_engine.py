@@ -687,6 +687,116 @@ class EngineAcceptance(unittest.TestCase):
             self.assertEqual(len(after["pages"][1]["versions"]), 1)
             self.assertEqual(len(CALLS), 3)
 
+    def test_23_layout_requires_explicit_page_mapping_without_changing_legacy_requests(self):
+        legacy = engine.Job.model_validate(example("legacy-shape", 1))
+        self.assertNotIn("reference_policy", legacy.model_dump())
+        before = engine.fingerprint(legacy.model_dump())
+        self.assertEqual(before, engine.fingerprint(engine.Job.model_validate(
+            {**legacy.model_dump(), "reference_policy": "inspiration"}).model_dump()))
+        job = example("layout-validation", 2)
+        ref = "a" * 64
+        job.update(mode="inspired", reference_policy="layout",
+                   references=[{"asset_id": ref, "rights": "inspiration", "purpose": "reference"}])
+        with self.assertRaises(ValueError):
+            engine.Job.model_validate(job)
+        for page in job["pages"]:
+            page["asset_ids"] = [ref]
+        parsed = engine.Job.model_validate(job)
+        planned = engine.planned_job(parsed)
+        self.assertNotIn("#167D8D", "\n".join(planned.visual_rules))
+        self.assertEqual(planned.reference_policy, "layout")
+        for mode in ("original", "edit"):
+            with self.assertRaises(ValueError):
+                engine.Job.model_validate({**job, "mode": mode})
+        product_only = deepcopy(job)
+        product_only["references"][0].update(purpose="product_material", rights="owned")
+        with self.assertRaises(ValueError):
+            engine.Job.model_validate(product_only)
+
+    def test_24_layout_real_images_map_to_every_page_and_revision_keeps_other_pages(self):
+        with self.service():
+            refs = [self.asset(f"自制母版第{i}页") for i in range(1, 4)]
+            job = example("layout-three", 3)
+            job.update(mode="inspired", reference_policy="layout",
+                       references=[{"asset_id": ref, "purpose": "reference", "rights": "inspiration"}
+                                   for ref in reversed(refs)])
+            for page, ref in zip(job["pages"], refs, strict=True):
+                page["asset_ids"] = [ref]
+            sent = []
+            original = fixture.FakeClient.generate_image
+            def observe(client, **kwargs):
+                sent.append(list(kwargs.get("reference_images") or []))
+                return original(client, **kwargs)
+            with patch.object(fixture.FakeClient, "generate_image", observe):
+                self.post("/jobs", job)
+                result = self.wait(job["task_id"])
+                self.assertEqual(result["status"], "completed")
+                for index, row in enumerate(result["pages"]):
+                    self.assertEqual(len(sent[index]), 1)
+                    import base64
+                    data = base64.b64decode(sent[index][0].split(",", 1)[1])
+                    self.assertEqual(hashlib.sha256(data).hexdigest(), refs[index])
+                    self.assertIn("结构迁移", CALLS[index]["prompt"])
+                    self.assertIn("标题区域的位置", CALLS[index]["prompt"])
+                    self.assertNotIn("围绕新主题独立原创设计", CALLS[index]["prompt"])
+                    self.assertNotIn("#167D8D", CALLS[index]["prompt"])
+                    self.assertIn(refs[index], CALLS[index]["prompt"])
+                    self.assertTrue(all(ref not in CALLS[index]["prompt"]
+                                        for ref in refs if ref != refs[index]))
+                hashes = [p["sha256"] for p in result["pages"]]
+                self.post("/jobs/layout-three/revisions", {
+                    "revision_id": "layout-page-2", "pages": [{"page_number": 2, "visual": "保持本页母版，调整元素"}],
+                    "authorization": {"approved": True, "max_image_requests": 1},
+                })
+                revised = self.wait(job["task_id"])
+                self.assertEqual([p["version"] for p in revised["pages"]], [1, 2, 1])
+                self.assertEqual(revised["pages"][0]["sha256"], hashes[0])
+                self.assertEqual(revised["pages"][2]["sha256"], hashes[2])
+                self.assertEqual(len(CALLS), 4)
+                self.assertIn("结构迁移", CALLS[-1]["prompt"])
+                response = self.client.get(revised["download_url"])
+                self.assertEqual(response.status_code, 200)
+                with zipfile.ZipFile(io.BytesIO(response.content)) as archive:
+                    self.assert_delivery_manifest(archive, revised)
+
+    def test_25_layout_analysis_keeps_visual_observation_and_protects_text_and_mapping(self):
+        with self.service(start=False):
+            root = workflow_root(self.ctx.storage)
+            config = seed_defaults(root)
+            config.update(analysis_model="offline-vision", analysis_base_url="https://offline.invalid/v1",
+                          analysis_api_key="offline-placeholder", analysis_protocol="chat_completions")
+            write_json(root / "settings.json", config)
+            ref = self.asset("自制母版")
+            job = example("layout-analysis", 1)
+            job.update(mode="inspired", reference_policy="layout",
+                       references=[{"asset_id": ref, "rights": "inspiration", "purpose": "reference"}])
+            job["pages"][0]["asset_ids"] = [ref]
+            seen = []
+            class Transport:
+                def request_bounded(self, **kwargs):
+                    request = json.loads(kwargs["body"])
+                    content = request["messages"][0]["content"]
+                    seen.extend(content)
+                    value = {"sources": [{"reference_index": 1, "actual_content": "参考有明确标题区和分区"}],
+                             "pages": [{"page_number": 1, "title": "错误改写", "copy": "错误正文",
+                                        "asset_ids": ["b" * 64], "visual": "引擎识别的标题区与分区关系"}]}
+                    return SimpleNamespace(status=200, body=json.dumps({
+                        "choices": [{"message": {"content": json.dumps(value, ensure_ascii=False)}}]
+                    }).encode())
+            with patch.object(self.ctx.network_egress_manager, "transport", return_value=Transport()):
+                payload = {"analysis_id": "layout-analysis-1", "job": job,
+                           "approved": True, "max_analysis_requests": 1}
+                result = self.post("/analyze", payload)
+                self.assertEqual(result, self.post("/analyze", payload))
+                page = result["analysis"]["pages"][0]
+                self.assertEqual(page["title"], job["pages"][0]["title"])
+                self.assertEqual(page["copy"], job["pages"][0]["copy"])
+                self.assertEqual(page["asset_ids"], [ref])
+                self.assertEqual(page["visual"], "引擎识别的标题区与分区关系")
+                self.assertEqual([c["type"] for c in seen], ["text", "image_url"])
+                self.assertIn("任务为结构迁移", seen[0]["text"])
+            self.assertEqual(len(CALLS), 0)
+
 
 if __name__ == "__main__":
     started = time.monotonic()
